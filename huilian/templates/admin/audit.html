@@ -1,0 +1,14 @@
+{% extends 'admin/_layout.html' %}
+{% block content %}
+<h1>{{ t('a_audit') }}</h1>
+<div class="panel tablewrap">
+<table class="data">
+  <thead><tr><th>{{ t('when') }}</th><th>{{ t('who') }}</th><th>{{ t('action') }}</th><th>{{ t('target') }}</th><th>{{ t('details') }}</th></tr></thead>
+  <tbody>
+  {% for a in rows %}
+  <tr><td class="muted">{{ a.created_at }}</td><td>{{ a.email or 'system' }}</td><td><b>{{ a.action }}</b></td><td>{{ a.target }}</td><td class="muted">{{ a.detail }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

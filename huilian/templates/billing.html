@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% set nav = 'profile' %}
+{% block header_left %}
+<a class="iconbtn" href="{{ url_for('me.profile') }}" aria-label="{{ t('back') }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+<strong>{{ t('billing') }}</strong>
+{% endblock %}
+{% block content %}
+<div class="panel" style="font-size:14px;color:var(--ink-2)">{{ t('pay_instructions') }}</div>
+{% if invoices %}
+<div class="tablewrap"><table class="data">
+  <thead><tr><th>{{ t('invoice') }}</th><th>{{ t('menu_promotions') }}</th><th>{{ t('amount') }}</th><th>{{ t('pay_method') }}</th><th>{{ t('due') }}</th><th>{{ t('status') }}</th></tr></thead>
+  <tbody>
+  {% for i in invoices %}
+    <tr><td><b>{{ i.number }}</b></td>
+      <td>{% if i.slot_kind %}{{ t('slot_' ~ i.slot_kind) }}{% if i.slot_category %} · {{ t('cat_' ~ i.slot_category) }}{% endif %} · {{ i.month }}{% endif %}</td>
+      <td>₱{{ '{:,}'.format(i.amount_php) }}</td>
+      <td>{{ t('pay_rrpay') if i.method == 'rrpay' else t('pay_bank') }}</td>
+      <td>{{ i.due_date }}</td>
+      <td><span class="tag {{ {'paid': 'st-ok', 'unpaid': 'st-warn', 'overdue': 'st-bad', 'void': 'st-closed'}[i.status] }}">{{ t('is_' ~ i.status) }}</span></td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}<div class="empty">{{ t('no_invoices') }}</div>{% endif %}
+{% endblock %}

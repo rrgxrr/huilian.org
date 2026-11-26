@@ -1,0 +1,32 @@
+{% extends 'admin/_layout.html' %}
+{% block content %}
+<h1>{{ t('a_companies') }}</h1>
+<div class="panel tablewrap">
+<table class="data" style="min-width:820px">
+  <thead><tr><th>{{ t('company_name') }}</th><th>{{ t('category') }}</th><th>{{ t('country') }}</th><th>{{ t('next_review') }}</th><th>{{ t('status') }}</th><th></th></tr></thead>
+  <tbody>
+  {% for c in rows %}
+  <tr>
+    <td>{% if c.kind == 'supplier' %}<a href="{{ url_for('public.supplier', company_id=c.id) }}"><b>{{ c.name }}</b></a>{% else %}<b>{{ c.name }}</b>{% endif %}
+      <div class="muted small">{{ t('kind_' ~ c.kind) }} · {{ c.users }} · {{ c.created_at[:10] }}</div></td>
+    <td>{{ t('cat_' ~ c.category) if c.category else '—' }}</td>
+    <td>{{ c.country }}</td>
+    <td>{{ c.next_review or '—' }}</td>
+    <td><span class="tag {{ {'active': 'st-ok', 'pending': 'st-warn', 'paused': 'st-bad', 'rejected': 'st-bad', 'removed': 'st-closed'}[c.status] }}">{{ t('co_' ~ c.status) }}</span></td>
+    <td>
+      {% if user.role == 'admin' %}
+      <form method="post" class="row" style="gap:6px;flex-wrap:nowrap">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <input type="hidden" name="company_id" value="{{ c.id }}">
+        {% if c.status == 'active' %}<button class="btn small" name="action" value="pause" type="submit">{{ t('pause') }}</button>{% endif %}
+        {% if c.status in ('paused', 'removed') %}<button class="btn small" name="action" value="reactivate" type="submit">{{ t('reactivate') }}</button>{% endif %}
+        {% if c.status != 'removed' %}<button class="btn small danger" name="action" value="remove" type="submit" onclick="return confirm('{{ t('remove') }}?')">{{ t('remove') }}</button>{% endif %}
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

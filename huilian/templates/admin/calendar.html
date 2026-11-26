@@ -1,0 +1,25 @@
+{% extends 'admin/_layout.html' %}
+{% block content %}
+<h1>{{ t('a_calendar') }}</h1>
+<div class="row muted">
+  <span class="row" style="gap:6px"><span class="c-open" style="width:14px;height:14px;border-radius:4px;display:inline-block"></span>{{ t('open') }}</span>
+  <span class="row" style="gap:6px"><span class="c-paid" style="width:14px;height:14px;border-radius:4px;display:inline-block"></span>{{ t('bs_paid') }}</span>
+  <span class="row" style="gap:6px"><span class="c-unpaid" style="width:14px;height:14px;border-radius:4px;display:inline-block"></span>{{ t('bs_unpaid') }}</span>
+</div>
+<div class="panel tablewrap">
+  <table class="cal">
+    <thead><tr><th></th>{% for m in months %}<th>{{ m }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for row in grid %}
+      <tr><td class="lbl">{{ t('slot_' ~ row.slot.kind) }}{% if row.slot.category %} · {{ t('cat_' ~ row.slot.category) }}{% endif %}<br><span class="muted">×{{ row.slot.capacity }} · ₱{{ '{:,}'.format(row.slot.price_php) }}</span></td>
+      {% for c in row.cells %}
+        <td class="c {{ 'c-open' if not c.rows else '' }}" style="padding:4px">
+          {% for b in c.rows %}<div class="c {{ 'c-paid' if b.status == 'paid' else 'c-unpaid' }}" style="border-radius:6px;padding:6px 4px;margin:2px 0">{{ b.name }}</div>{% endfor %}
+          {% if c.free > 0 %}<div class="muted small" style="padding:4px">{{ t('open') }} ×{{ c.free }}</div>{% endif %}
+        </td>
+      {% endfor %}</tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

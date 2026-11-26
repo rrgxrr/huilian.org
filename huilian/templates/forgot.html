@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% set nav = 'profile' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<h1>{{ t('forgot_title') }}</h1>
+<p class="muted">{{ t('forgot_sub') }}</p>
+<form class="stack" method="post">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label class="f">{{ t('work_email') }}<input type="email" name="email" required autocomplete="email"></label>
+  <button class="btn gold block" type="submit">{{ t('send_link') }}</button>
+</form>
+{% endblock %}

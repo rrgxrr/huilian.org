@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<div class="empty">{{ t(message_key) }}</div>
+<a class="btn" style="align-self:center" href="{{ url_for('public.home') }}">{{ t('nav_home') }}</a>
+{% endblock %}

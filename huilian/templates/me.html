@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import logo_img %}
+{% set nav = 'profile' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<h1>{{ t('me') }}</h1>
+
+<section class="panel row" style="flex-wrap:nowrap;padding:18px">
+  {{ logo_img(company, 'logo lg') }}
+  <div class="grow stack" style="gap:4px">
+    <b style="font-size:17px">{{ company.name }}</b>
+    <span class="muted">{{ t('kind_' ~ company.kind) }}{% if company.category %} · {{ t('cat_' ~ company.category) }}{% endif %} · {{ user.email }}</span>
+    {% if state == 'verified' and cred %}
+      <span class="small" style="color:var(--ok)">{{ t('cred_' ~ cred.kind) }} {{ t('verified') }} · {{ t('next_review') }} {{ cred.next_review }}</span>
+    {% elif state == 'pending' %}<span class="tag st-warn" style="align-self:flex-start">{{ t('account_pending') }}</span>
+    {% elif state == 'info' %}<span class="tag st-warn" style="align-self:flex-start">{{ t('account_info') }}</span>
+    {% elif state == 'rejected' %}<span class="tag st-bad" style="align-self:flex-start">{{ t('account_rejected') }}</span>
+    {% else %}<span class="tag st-bad" style="align-self:flex-start">{{ t('account_paused') }}</span>{% endif %}
+  </div>
+</section>
+
+{% if state in ('info', 'rejected', 'paused') and cred and cred.note %}
+<div class="warnbox">{{ t('note_from_reviewer') }}: {{ cred.note }} — <a href="{{ url_for('me.credentials') }}" style="color:inherit;font-weight:800">{{ t('credentials') }}</a></div>
+{% endif %}
+
+{% if stats %}
+<div class="stats">
+  <div class="stat"><div class="muted">{{ t('stat_enquiries') }}</div><div class="v">{{ stats.enquiries }}</div></div>
+  <div class="stat"><div class="muted">{{ t('stat_reply') }}</div><div class="v">{{ stats.reply }}</div></div>
+  <div class="stat"><div class="muted">{{ t('stat_views') }}</div><div class="v">{{ stats.views }}</div></div>
+  <div class="stat"><div class="muted">{{ t('stat_impr') }}</div><div class="v">{{ stats.impr }}</div></div>
+</div>
+{% endif %}
+
+<section class="stack list">
+  <div class="row spread">
+    <h2>{{ t('inbox') if company.kind == 'supplier' else t('my_enquiries') }}</h2>
+    {% if company.kind == 'supplier' and new_count %}<span class="tag st-new">{{ new_count }} {{ t('status_new') }}</span>{% endif %}
+  </div>
+  {% for e in enquiries %}
+  <a class="item" href="{{ url_for('me.thread', enquiry_id=e.id) }}">
+    <span class="logo" aria-hidden="true">{{ e.other_name[:1] }}</span>
+    <span class="grow stack" style="gap:2px">
+      <span class="row spread" style="flex-wrap:nowrap"><b class="ellipsis">{{ e.other_name }}</b><span class="muted" style="flex:none">{{ e.updated_at[:10] }}</span></span>
+      <span class="muted ellipsis">{{ e.preview }}</span>
+    </span>
+    <span class="tag {{ e.label[1] }}">{{ t(e.label[0]) }}</span>
+  </a>
+  {% else %}
+  <div class="empty">{{ t('no_enquiries') }}</div>
+  {% endfor %}
+</section>
+
+<section class="panel tight menu">
+  {% if company.kind == 'supplier' %}
+  <a href="{{ url_for('me.promotions') }}"><span>{{ t('menu_promotions') }}</span><span aria-hidden="true">›</span></a>
+  <a href="{{ url_for('me.edit_profile') }}"><span>{{ t('menu_edit_profile') }}</span><span aria-hidden="true">›</span></a>
+  <a href="{{ url_for('me.billing') }}"><span>{{ t('menu_billing') }}</span><span aria-hidden="true">›</span></a>
+  {% endif %}
+  <a href="{{ url_for('deals.index') }}"><span>{{ t('menu_deals') }}</span><span aria-hidden="true">›</span></a>
+  <a href="{{ url_for('deals.telegram') }}"><span>{{ t('menu_telegram') }}</span><span aria-hidden="true">›</span></a>
+  <a href="{{ url_for('me.credentials') }}"><span>{{ t('menu_credentials') }}</span><span aria-hidden="true">›</span></a>
+  <form method="post" action="{{ url_for('auth.logout') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <button type="submit">{{ t('sign_out') }}</button>
+  </form>
+</section>
+{% endblock %}

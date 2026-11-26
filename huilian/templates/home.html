@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import logo_img %}
+{% set nav = 'home' %}
+{% block header_right %}<a class="btn small gold" href="{{ url_for('auth.register', role='supplier') }}">{{ t('list_company') }}</a>{% endblock %}
+{% block content %}
+<section class="stack">
+  <span class="pill">{{ t('home_pill') }}</span>
+  <h1>{{ t('tagline') }}</h1>
+</section>
+
+<nav class="tabs" aria-label="View">
+  <a href="{{ url_for('public.home', tab='all', cat=cat) }}" class="{{ 'on' if tab == 'all' }}" {% if tab == 'all' %}aria-current="page"{% endif %}>{{ t('tab_suppliers') }}</a>
+  <a href="{{ url_for('public.home', tab='feat', cat=cat) }}" class="{{ 'on' if tab == 'feat' }}" {% if tab == 'feat' %}aria-current="page"{% endif %}>{{ t('tab_featured') }}</a>
+</nav>
+
+<nav class="cats" aria-label="Categories">
+  <a href="{{ url_for('public.home', tab=tab) }}" class="{{ 'on' if cat == 'all' }}">{{ t('cat_all') }} <span class="n">{{ counts.get('all', 0) }}</span></a>
+  {% for c in categories %}
+  <a href="{{ url_for('public.home', tab=tab, cat=c) }}" class="{{ 'on' if cat == c }}">{{ t('cat_' ~ c) }} <span class="n">{{ counts.get(c, 0) }}</span></a>
+  {% endfor %}
+</nav>
+
+{% if spot %}
+<section class="spot" aria-label="{{ t('spotlight_tag') }}">
+  <div class="txt">
+    <span class="tag st-closed" style="align-self:flex-start">{{ t('spotlight_tag') }}</span>
+    <h2 style="font-size:24px">{{ spot.headline }}</h2>
+    <p class="muted">{{ spot.name }} · {{ t('cat_' ~ spot.category) }}</p>
+    <a class="btn gold" style="align-self:flex-start" href="{{ url_for('public.supplier', company_id=spot.company_id) }}">{{ t('contact_supplier') }}</a>
+  </div>
+  {% if spot.creative_path %}<img src="{{ url_for('public.banner', booking_id=spot.id) }}" alt="{{ spot.name }}">{% endif %}
+</section>
+{% endif %}
+
+{% if items %}
+<div class="cards">
+  {% for co in items %}
+  <a class="card" href="{{ url_for('public.supplier', company_id=co.id) }}">
+    {{ logo_img(co) }}
+    <span class="name">{{ co.name }}</span>
+    {% if co.id in sponsored %}<span class="tag ad">{{ t('ad') }}</span>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">{{ t('empty_featured') if tab == 'feat' else t('empty_list') }}</div>
+{% endif %}
+
+<div class="note row spread">
+  <span class="grow">{{ t('policy_note') }}</span>
+  <a href="{{ url_for('auth.register', role='supplier') }}">{{ t('list_company') }} →</a>
+</div>
+{% endblock %}

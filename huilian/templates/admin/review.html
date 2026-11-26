@@ -1,0 +1,51 @@
+{% extends 'admin/_layout.html' %}
+{% block content %}
+<h1>{{ t('a_review') }}</h1>
+{% if not creds and not creatives %}<div class="empty">{{ t('queue_empty') }}</div>{% endif %}
+
+{% for c in creds %}
+<div class="qitem">
+  <div class="row spread">
+    <div class="stack" style="gap:4px">
+      <div class="row" style="gap:8px"><b style="font-size:16px">{{ c.name }}</b>
+        <span class="tag {{ 'st-closed' if c.company_kind == 'operator' else 'st-new' }}">{{ t('kind_' ~ c.company_kind) }}{% if c.category %} · {{ t('cat_' ~ c.category) }}{% endif %}</span>
+        {% if c.status == 'info_requested' %}<span class="tag st-warn">{{ t('cs2_info_requested') }}</span>{% endif %}</div>
+      <span class="muted">{{ t('cred_' ~ c.kind) }} · <b style="color:var(--ink)">{{ c.number }}</b> · {{ c.country }} · {{ c.created_at[:16] }}</span>
+      {% if c.note %}<span class="muted">{{ t('note_from_reviewer') }}: {{ c.note }}</span>{% endif %}
+    </div>
+    <div class="row">
+      {% if c.file_path %}<a class="btn small" href="{{ url_for('public.private_file', rel=c.file_path) }}" target="_blank" rel="noopener">{{ t('view_doc') }}</a>{% endif %}
+      {% if c.aml_policy_path %}<a class="btn small" href="{{ url_for('public.private_file', rel=c.aml_policy_path) }}" target="_blank" rel="noopener">{{ t('view_aml') }}</a>{% endif %}
+    </div>
+  </div>
+  <form method="post" action="{{ url_for('admin.decide_credential', cred_id=c.id) }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label class="f" style="flex:1 1 240px">{{ t('review_note') }}<input type="text" name="note" maxlength="1000"></label>
+    <label class="f">{{ t('review_due') }}<input type="date" name="next_review" value="{{ default_due[c.kind] }}"></label>
+    <button class="btn small" name="action" value="ask" type="submit">{{ t('ask_info') }}</button>
+    <button class="btn small danger" name="action" value="reject" type="submit">{{ t('reject') }}</button>
+    <button class="btn small gold" name="action" value="approve" type="submit">{{ t('approve') }}</button>
+  </form>
+</div>
+{% endfor %}
+
+{% for b in creatives %}
+<div class="qitem">
+  <div class="row spread">
+    <div class="stack" style="gap:4px">
+      <div class="row" style="gap:8px"><b style="font-size:16px">{{ b.name }}</b><span class="tag st-new">{{ t('kind_creative') }}</span></div>
+      <span class="muted">{{ t('slot_' ~ b.slot_kind) }} · {{ b.month }} · “{{ b.headline }}”</span>
+    </div>
+    <a class="btn small" href="{{ url_for('public.banner', booking_id=b.id) }}" target="_blank" rel="noopener">{{ t('view_doc') }}</a>
+  </div>
+  <img src="{{ url_for('public.banner', booking_id=b.id) }}" alt="" style="max-width:360px;border-radius:12px;border:1px solid var(--line)">
+  <form method="post" action="{{ url_for('admin.decide_creative', booking_id=b.id) }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label class="f" style="flex:1 1 240px">{{ t('review_note') }}<input type="text" name="note" maxlength="1000"></label>
+    <button class="btn small danger" name="action" value="reject" type="submit">{{ t('reject') }}</button>
+    <button class="btn small gold" name="action" value="approve" type="submit">{{ t('approve') }}</button>
+  </form>
+</div>
+{% endfor %}
+<p class="fine">{{ t('review_fine') }}</p>
+{% endblock %}

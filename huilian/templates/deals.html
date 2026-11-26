@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% set nav = 'profile' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block header_left %}
+<a class="iconbtn" href="{{ url_for('me.profile') }}" aria-label="{{ t('back') }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+<strong>{{ t('deals') }}</strong>
+{% endblock %}
+{% block content %}
+<p class="fine">{{ t('deal_no_funds') }}</p>
+<section class="stack list">
+  {% for d in rows %}
+  {% set other = d.supplier_name if company.id == d.operator_id else d.operator_name %}
+  <a class="item" href="{{ url_for('deals.view', deal_id=d.id) }}">
+    <span class="logo" aria-hidden="true">#{{ d.id }}</span>
+    <span class="grow stack" style="gap:2px"><b class="ellipsis">{{ d.title }}</b><span class="muted ellipsis">{{ other }} · {{ d.currency }}</span></span>
+    <span class="tag {{ {'proposed': 'st-warn', 'active': 'st-new', 'completed': 'st-ok', 'disputed': 'st-bad', 'resolved': 'st-closed', 'declined': 'st-closed', 'cancelled': 'st-closed'}[d.status] }}">{{ t('ds_' ~ d.status) }}</span>
+  </a>
+  {% else %}
+  <div class="empty">{{ t('no_deals') }}</div>
+  {% endfor %}
+</section>
+<a class="btn" href="{{ url_for('deals.telegram') }}">{{ t('menu_telegram') }}</a>
+{% endblock %}

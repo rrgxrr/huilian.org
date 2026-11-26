@@ -1,0 +1,15 @@
+{% macro lang_select() %}
+<form class="langsel" method="get" action="{{ url_for('public.set_lang') }}">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B8BCC6" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>
+  <label class="sr" for="langpick">{{ t('language') }}</label>
+  <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+  <select id="langpick" name="code" onchange="this.form.submit()">
+    {% for code, label in langs.items() %}<option value="{{ code }}" {{ 'selected' if code == lang }}>{{ label }}</option>{% endfor %}
+  </select>
+  <noscript><button class="btn small" type="submit">OK</button></noscript>
+</form>
+{% endmacro %}
+{% macro logo_img(co, cls='logo') %}
+  {% if co.logo_path %}<img class="{{ cls }}" src="{{ url_for('public.logo', company_id=co.id) }}" alt="">
+  {% else %}<span class="{{ cls }}" aria-hidden="true">{{ co.name[:1] }}</span>{% endif %}
+{% endmacro %}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="{{ 'zh-CN' if lang == 'zh' else 'en' }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>{{ t('admin') }} · HUILIAN</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% from '_macros.html' import lang_select with context %}
+<div class="admin">
+  <aside>
+    <a class="brand" href="{{ url_for('public.home') }}"><span class="mark">灰</span><span>HUILIAN<br><span class="muted" style="font-weight:500">{{ t('admin') }}</span></span></a>
+    <nav aria-label="Admin">
+      <a href="{{ url_for('admin.review') }}" class="{{ 'on' if active == 'review' }}">{{ t('a_review') }}{% if k.pending %}<span class="badge">{{ k.pending }}</span>{% endif %}</a>
+      <a href="{{ url_for('deals.disputes') }}" class="{{ 'on' if active == 'disputes' }}">{{ t('a_disputes') }}{% if k.disputes %}<span class="badge">{{ k.disputes }}</span>{% endif %}</a>
+      <a href="{{ url_for('admin.calendar') }}" class="{{ 'on' if active == 'calendar' }}">{{ t('a_calendar') }}</a>
+      {% if user.role == 'admin' %}<a href="{{ url_for('admin.billing') }}" class="{{ 'on' if active == 'billing' }}">{{ t('a_billing') }}</a>{% endif %}
+      <a href="{{ url_for('admin.renewals') }}" class="{{ 'on' if active == 'renewals' }}">{{ t('a_renewals') }}</a>
+      <a href="{{ url_for('admin.companies') }}" class="{{ 'on' if active == 'companies' }}">{{ t('a_companies') }}</a>
+      {% if user.role == 'admin' %}<a href="{{ url_for('admin.audit_log') }}" class="{{ 'on' if active == 'audit' }}">{{ t('a_audit') }}</a>{% endif %}
+    </nav>
+    <div class="stack" style="margin-top:auto">
+      {{ lang_select() }}
+      {% if user.role == 'admin' %}
+      <form method="post" action="{{ url_for('admin.telegram_webhook') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn small block" type="submit">{{ t('tg_connect_webhook') }}</button></form>
+      {% endif %}
+      <form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn small block" type="submit">{{ t('sign_out') }}</button></form>
+    </div>
+  </aside>
+  <main>
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in msgs %}<div class="flash {{ cat }}" role="status">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    <div class="kpis">
+      <div class="stat"><div class="muted">{{ t('k_pending') }}</div><div class="v" style="color:var(--warn)">{{ k.pending }}</div></div>
+      <div class="stat"><div class="muted">{{ t('k_suppliers') }}</div><div class="v">{{ k.suppliers }}</div></div>
+      <div class="stat"><div class="muted">{{ t('k_operators') }}</div><div class="v">{{ k.operators }}</div></div>
+      <div class="stat"><div class="muted">{{ t('k_revenue') }}</div><div class="v" style="color:var(--ok)">₱{{ '{:,}'.format(k.paid) }}</div></div>
+    </div>
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

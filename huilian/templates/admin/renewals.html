@@ -1,0 +1,22 @@
+{% extends 'admin/_layout.html' %}
+{% block content %}
+<h1>{{ t('a_renewals') }}</h1>
+<p class="fine">{{ t('renewals_fine') }}</p>
+{% for r in items %}
+<div class="qitem" style="flex-direction:row;flex-wrap:wrap;align-items:center">
+  <span style="width:10px;height:10px;border-radius:999px;flex:none;background:{{ 'var(--bad)' if r.delta < 8 else ('var(--warn)' if r.delta < 31 else 'var(--ok)') }}"></span>
+  <div class="grow stack" style="gap:2px;min-width:220px">
+    <b>{{ r.name }}</b>
+    <span class="muted">{{ t('kind_' ~ r.company_kind) }}{% if r.category %} · {{ t('cat_' ~ r.category) }}{% endif %} · {{ t('cred_' ~ r.kind) }} {{ r.number }} · {{ r.next_review }}</span>
+  </div>
+  <b style="color:{{ 'var(--bad)' if r.delta < 8 else 'var(--warn)' }}">{{ t('days_left', n=r.delta) if r.delta >= 0 else t('days_over', n=-r.delta) }}</b>
+  <form method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="credential_id" value="{{ r.id }}">
+    <button class="btn small" type="submit">{{ t('reminded') ~ ' ' ~ r.reminded_at if r.reminded_at else t('send_reminder') }}</button>
+  </form>
+</div>
+{% else %}
+<div class="empty">{{ t('queue_empty') }}</div>
+{% endfor %}
+{% endblock %}

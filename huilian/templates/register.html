@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% set nav = 'profile' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<section class="stack">
+  <h1>{{ t('register_title') }}</h1>
+  <p class="muted">{{ t('register_sub') }}</p>
+</section>
+
+<div class="stack" style="gap:8px">
+  <span class="muted">{{ t('i_am') }}</span>
+  <div class="choice">
+    <a href="{{ url_for('auth.register', role='operator', next=next) }}" class="{{ 'on' if role == 'operator' }}" {% if role == 'operator' %}aria-current="true"{% endif %}><b>{{ t('role_operator') }}</b><span>{{ t('role_operator_hint') }}</span></a>
+    <a href="{{ url_for('auth.register', role='supplier', next=next) }}" class="{{ 'on' if role == 'supplier' }}" {% if role == 'supplier' %}aria-current="true"{% endif %}><b>{{ t('role_supplier') }}</b><span>{{ t('role_supplier_hint') }}</span></a>
+  </div>
+</div>
+
+<form class="stack" method="post" enctype="multipart/form-data" action="{{ url_for('auth.register') }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <input type="hidden" name="role" value="{{ role }}">
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  <label class="f">{{ t('company_name') }}<input type="text" name="company_name" required maxlength="200" value="{{ form.get('company_name', '') }}"></label>
+  <label class="f">{{ t('country') }}<input type="text" name="country" required maxlength="80" value="{{ form.get('country', '') }}" placeholder="Philippines"></label>
+  {% if role == 'supplier' %}
+  <label class="f">{{ t('category') }}
+    <select name="category" id="cat" required>
+      {% for c in ['wl', 'pay', 'fx', 'mkt'] %}<option value="{{ c }}" {{ 'selected' if form.get('category') == c }}>{{ t('cat_' ~ c) }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="f">{{ t('credential_type') }}
+    <select name="credential_type" id="credtype" required>
+      {% for k in ['pagcor_accreditation', 'bsp', 'business_reg'] %}<option value="{{ k }}" {{ 'selected' if form.get('credential_type') == k }}>{{ t('cred_' ~ k) }}</option>{% endfor %}
+    </select>
+  </label>
+  {% else %}
+  <p class="muted">{{ t('credential_type') }}: <b>{{ t('cred_pagcor_licence') }}</b></p>
+  {% endif %}
+  <label class="f">{{ t('credential_number') }}<input type="text" name="credential_number" required maxlength="120" value="{{ form.get('credential_number', '') }}"></label>
+  <label class="f">{{ t('credential_file') }}<input type="file" name="credential_file" required accept=".pdf,.png,.jpg,.jpeg"></label>
+  {% if role == 'supplier' %}
+  <label class="f" id="amlrow">{{ t('aml_file') }}<input type="file" name="aml_file" accept=".pdf,.png,.jpg,.jpeg"></label>
+  {% endif %}
+  <label class="f">{{ t('your_name') }}<input type="text" name="name" required maxlength="120" value="{{ form.get('name', '') }}" autocomplete="name"></label>
+  <label class="f">{{ t('work_email') }}<input type="email" name="email" required maxlength="200" value="{{ form.get('email', '') }}" autocomplete="email"></label>
+  <label class="f">{{ t('password') }}<input type="password" name="password" required minlength="10" autocomplete="new-password"></label>
+  {% if role == 'supplier' %}
+  <label class="check"><input type="checkbox" name="pledge" value="1" required><span>{{ t('pledge') }}</span></label>
+  {% endif %}
+  <button class="btn gold block" type="submit">{{ t('create_account') }}</button>
+  <p class="muted" style="text-align:center">{{ t('have_account') }} <a href="{{ url_for('auth.login', next=next) }}">{{ t('sign_in') }}</a></p>
+</form>
+
+{% if role == 'supplier' %}
+<script>
+(function () {
+  var map = {{ credentials_for | tojson }};
+  var cat = document.getElementById('cat'), type = document.getElementById('credtype'), aml = document.getElementById('amlrow');
+  function sync() {
+    var ok = map[cat.value] || [];
+    Array.prototype.forEach.call(type.options, function (o) { o.hidden = ok.indexOf(o.value) < 0; o.disabled = o.hidden; });
+    if (ok.indexOf(type.value) < 0) type.value = ok[0];
+    var needs = cat.value === 'pay' || cat.value === 'fx';
+    aml.style.display = needs ? '' : 'none';
+    aml.querySelector('input').required = needs;
+  }
+  cat.addEventListener('change', sync); sync();
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% set nav = 'profile' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block header_left %}
+<a class="iconbtn" href="{{ url_for('me.profile') }}" aria-label="{{ t('back') }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+<strong>{{ t('tg_title') }}</strong>
+{% endblock %}
+{% block content %}
+<p class="muted">{{ t('tg_sub') }}</p>
+{% if linked %}
+<div class="verified">{{ t('tg_linked_as') }}{% if linked.username %} · @{{ linked.username }}{% endif %} · {{ linked.linked_at[:10] }}</div>
+<form method="post"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="unlink">
+  <button class="btn danger" type="submit">{{ t('tg_unlink') }}</button></form>
+{% elif code %}
+<section class="panel stack">
+  {% if link %}<a class="btn gold block" href="{{ link }}" target="_blank" rel="noopener">{{ t('tg_open_bot') }}{% if bot %} @{{ bot }}{% endif %}</a>{% endif %}
+  <span class="muted">{{ t('tg_or_send') }}</span>
+  <code style="font-size:20px;font-weight:800;background:var(--panel-2);padding:12px 14px;border-radius:12px">/start {{ code }}</code>
+  {% if not bot %}<div class="warnbox">{{ t('tg_not_configured') }}</div>{% endif %}
+</section>
+{% else %}
+<form method="post"><input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <button class="btn gold block" type="submit">{{ t('tg_get_code') }}</button></form>
+{% endif %}
+<p class="fine">{{ t('tg_group_tip') }}</p>
+<p class="fine">{{ t('deal_no_funds') }}</p>
+{% endblock %}

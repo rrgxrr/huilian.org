@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import logo_img %}
+{% set nav = 'profile' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block header_left %}
+<a class="iconbtn" href="{{ url_for('me.profile') }}" aria-label="{{ t('back') }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+<strong>{{ t('enquiry_details') }}</strong>
+{% endblock %}
+{% block content %}
+<div class="panel row" style="padding:14px;flex-wrap:nowrap">
+  {{ logo_img(other) }}
+  <div class="grow">
+    {% if me_is_operator %}<a href="{{ url_for('public.supplier', company_id=other.id) }}"><b>{{ other.name }}</b></a>
+    {% else %}<b>{{ other.name }}</b>{% endif %}
+  </div>
+  <span class="tag {{ label[1] }}">{{ t(label[0]) }}</span>
+</div>
+
+<div class="panel facts" style="padding:4px 16px">
+  <div class="r"><span class="muted">{{ t('service') }}</span><span>{{ service }}</span></div>
+  {% if volume_key %}<div class="r"><span class="muted">{{ t('monthly_volume') }}</span><span>{{ t(volume_key) }}</span></div>{% endif %}
+  <div class="r"><span class="muted">{{ t('when') }}</span><span>{{ enq.created_at[:16] }}</span></div>
+</div>
+
+{% if contact %}
+<div class="panel stack" style="gap:4px;padding:14px 16px">
+  <span class="muted">{{ t('operator_contact') }}</span>
+  <span>{{ t('cred_pagcor_licence') }}: <b>{{ contact.licence }}</b></span>
+  <span>{{ contact.emails | join(', ') }}</span>
+</div>
+{% endif %}
+
+{% for d in linked_deals %}
+<a class="panel row" style="padding:14px;text-decoration:none" href="{{ url_for('deals.view', deal_id=d.id) }}">
+  <span class="grow"><span class="muted">{{ t('deals') }} #{{ d.id }}</span><br><b>{{ d.title }}</b></span>
+  <span class="tag {{ {'proposed': 'st-warn', 'active': 'st-new', 'completed': 'st-ok', 'disputed': 'st-bad'}.get(d.status, 'st-closed') }}">{{ t('ds_' ~ d.status) }}</span>
+</a>
+{% endfor %}
+{% if not me_is_operator and enq.status != 'closed' %}
+<a class="btn gold" href="{{ url_for('deals.new', enquiry=enq.id) }}">🤝 {{ t('start_deal') }}</a>
+{% endif %}
+
+<section class="stack">
+  {% for m in messages %}
+  {% set mine = m.sender_company_id == company.id %}
+  <div class="msg {{ 'me' if mine }}"><div class="bubble">{{ m.body }}<span class="meta">{{ t('you') if mine else other.name }} · {{ m.created_at[:16] }}</span></div></div>
+  {% endfor %}
+</section>
+
+{% if enq.status != 'closed' %}
+<form class="stack" method="post">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label class="f"><span class="sr">{{ t('reply') }}</span><textarea name="body" required maxlength="5000" placeholder="{{ t('reply_ph') }}" style="min-height:80px"></textarea></label>
+  <div class="row spread">
+    <button class="btn gold" type="submit">{{ t('reply') }}</button>
+    <button class="btn small" type="submit" name="action" value="close" formnovalidate>{{ t('close_enquiry') }}</button>
+  </div>
+</form>
+{% else %}
+<div class="empty">{{ t('enquiry_closed') }}</div>
+{% endif %}
+<p class="fine">{{ t('thread_fine') }}</p>
+{% endblock %}

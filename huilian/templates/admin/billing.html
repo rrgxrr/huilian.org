@@ -1,0 +1,37 @@
+{% extends 'admin/_layout.html' %}
+{% block content %}
+<h1>{{ t('a_billing') }}</h1>
+{% if invoices %}
+<div class="panel tablewrap">
+<table class="data" style="min-width:860px">
+  <thead><tr><th>{{ t('invoice') }}</th><th>{{ t('who') }}</th><th>{{ t('menu_promotions') }}</th><th>{{ t('pay_method') }}</th><th>{{ t('amount') }}</th><th>{{ t('due') }}</th><th>{{ t('status') }}</th><th></th></tr></thead>
+  <tbody>
+  {% for i in invoices %}
+  <tr>
+    <td><b>{{ i.number }}</b></td>
+    <td>{{ i.name }}</td>
+    <td>{% if i.slot_kind %}{{ t('slot_' ~ i.slot_kind) }}{% if i.slot_category %} · {{ t('cat_' ~ i.slot_category) }}{% endif %} · {{ i.month }}{% endif %}</td>
+    <td>{{ t('pay_rrpay') if i.method == 'rrpay' else t('pay_bank') }}</td>
+    <td>₱{{ '{:,}'.format(i.amount_php) }}</td>
+    <td>{{ i.due_date }}</td>
+    <td><span class="tag {{ {'paid': 'st-ok', 'unpaid': 'st-warn', 'overdue': 'st-bad', 'void': 'st-closed'}[i.status] }}">{{ t('is_' ~ i.status) }}</span>
+      {% if i.reference %}<div class="muted small">{{ i.reference }}</div>{% endif %}</td>
+    <td>
+      {% if i.status in ('unpaid', 'overdue') %}
+      <form method="post" class="row" style="gap:6px;flex-wrap:nowrap">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <input type="hidden" name="invoice_id" value="{{ i.id }}">
+        <label class="sr" for="ref{{ i.id }}">{{ t('reference') }}</label>
+        <input id="ref{{ i.id }}" type="text" name="reference" placeholder="{{ t('reference') }}" style="min-height:40px;width:140px;font-size:14px">
+        <button class="btn small gold" name="action" value="paid" type="submit">{{ t('mark_paid') }}</button>
+        <button class="btn small" name="action" value="void" type="submit">{{ t('void') }}</button>
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<div class="empty">{{ t('no_invoices') }}</div>{% endif %}
+{% endblock %}

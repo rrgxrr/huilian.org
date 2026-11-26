@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% set nav = 'profile' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<h1>{{ t('login_title') }}</h1>
+<form class="stack" method="post" action="{{ url_for('auth.login') }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  <label class="f">{{ t('work_email') }}<input type="email" name="email" required value="{{ email }}" autocomplete="email"></label>
+  <label class="f">{{ t('password_plain') }}<input type="password" name="password" required autocomplete="current-password"></label>
+  <button class="btn gold block" type="submit">{{ t('sign_in') }}</button>
+  <a class="muted" style="text-align:center" href="{{ url_for('auth.forgot') }}">{{ t('forgot') }}</a>
+</form>
+<p class="muted" style="text-align:center">{{ t('no_account') }}
+  <a href="{{ url_for('auth.register', role='operator', next=next) }}">{{ t('role_operator') }}</a> ·
+  <a href="{{ url_for('auth.register', role='supplier', next=next) }}">{{ t('role_supplier') }}</a></p>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% set nav = 'profile' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block title %}#{{ deal.id }} {{ deal.title }} · {{ t('brand') }}{% endblock %}
+{% block header_left %}
+<a class="iconbtn" href="{{ url_for('deals.disputes') if staff and not side else url_for('deals.index') }}" aria-label="{{ t('back') }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+<strong>{{ t('deals') }} #{{ deal.id }}</strong>
+{% endblock %}
+{% macro act(action, label, cls='btn small', ms=None) %}
+<form method="post" action="{{ url_for('deals.act', deal_id=deal.id) }}" style="display:inline">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="{{ action }}">
+  {% if ms %}<input type="hidden" name="milestone_id" value="{{ ms }}">{% endif %}
+  <button class="{{ cls }}" type="submit">{{ label }}</button>
+</form>
+{% endmacro %}
+{% block content %}
+{% set badge = {'proposed': 'st-warn', 'active': 'st-new', 'completed': 'st-ok', 'disputed': 'st-bad', 'resolved': 'st-closed', 'declined': 'st-closed', 'cancelled': 'st-closed'}[deal.status] %}
+<section class="panel stack" style="gap:10px">
+  <div class="row spread"><h1 style="font-size:22px">{{ deal.title }}</h1><span class="tag {{ badge }}">{{ t('ds_' ~ deal.status) }}</span></div>
+  <div class="facts">
+    <div class="r"><span class="muted">{{ t('kind_operator') }}</span><span>{{ operator.name }}</span></div>
+    <div class="r"><span class="muted">{{ t('kind_supplier') }}</span><span><a href="{{ url_for('public.supplier', company_id=supplier.id) }}">{{ supplier.name }}</a></span></div>
+    <div class="r"><span class="muted">{{ t('deal_currency') }}</span><span>{{ deal.currency }}</span></div>
+    {% if deal.terms_hash %}<div class="r"><span class="muted">{{ t('deal_terms_hash') }}</span><span style="font-family:monospace;font-size:12px">{{ deal.terms_hash[:16] }}…</span></div>{% endif %}
+  </div>
+  <p style="white-space:pre-line;color:var(--ink-2)">{{ deal.scope }}</p>
+  {% if deal.pay_terms %}<p class="muted" style="white-space:pre-line">{{ t('deal_pay_terms') }}: {{ deal.pay_terms }}</p>{% endif %}
+  {% if deal.status == 'proposed' %}
+    <div class="row">
+      {% if side == 'operator' %}{{ act('accept', t('deal_accept'), 'btn gold') }}{{ act('decline', t('deal_decline'), 'btn danger') }}{% endif %}
+      {% if side == 'supplier' %}{{ act('withdraw', t('deal_withdraw')) }}{% endif %}
+    </div>
+  {% endif %}
+</section>
+
+<div class="warnbox" style="background:var(--panel);color:var(--ink-2);border:1px solid var(--line)">{{ t('deal_no_funds') }}</div>
+
+<section class="stack">
+  <h2>{{ t('milestones') }}</h2>
+  {% for m in ms %}
+  <div class="panel stack" style="gap:10px;padding:16px">
+    <div class="row spread" style="flex-wrap:nowrap"><b>{{ m.seq }}. {{ m.title }}</b><b style="flex:none">{{ m.amount }} {{ deal.currency }}</b></div>
+    {% if m.due_date %}<span class="muted">{{ t('due') }} {{ m.due_date }}</span>{% endif %}
+    <div class="row" style="gap:8px">
+      <span class="tag {{ {'open': 'st-closed', 'delivered': 'st-warn', 'accepted': 'st-ok'}[m.delivery] }}">{{ t('md_' ~ m.delivery) }}</span>
+      <span class="tag {{ {'unpaid': 'st-closed', 'claimed': 'st-warn', 'confirmed': 'st-ok'}[m.payment] }}">{{ t('mp_' ~ m.payment) }}</span>
+      {% if m.pay_reference %}<span class="muted small">ref {{ m.pay_reference }}</span>{% endif %}
+    </div>
+    {% if deal.status == 'active' %}
+      {% if side == 'supplier' and m.delivery == 'open' %}
+      <form method="post" action="{{ url_for('deals.act', deal_id=deal.id) }}" class="row" style="flex-wrap:nowrap">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="deliver"><input type="hidden" name="milestone_id" value="{{ m.id }}">
+        <label class="sr" for="dn{{ m.id }}">{{ t('deal_note_optional') }}</label>
+        <input id="dn{{ m.id }}" type="text" name="note" maxlength="1000" placeholder="{{ t('deal_note_optional') }}" style="min-height:44px">
+        <button class="btn small gold" type="submit" style="flex:none">{{ t('deal_mark_delivered') }}</button>
+      </form>
+      {% endif %}
+      {% if side == 'operator' and m.delivery == 'delivered' %}{{ act('accept_delivery', t('deal_accept_delivery'), 'btn small gold', m.id) }}{% endif %}
+      {% if side == 'operator' and m.payment == 'unpaid' %}
+      <form method="post" action="{{ url_for('deals.act', deal_id=deal.id) }}" class="row" style="flex-wrap:nowrap">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="paid"><input type="hidden" name="milestone_id" value="{{ m.id }}">
+        <label class="sr" for="pr{{ m.id }}">{{ t('deal_reference') }}</label>
+        <input id="pr{{ m.id }}" type="text" name="reference" required maxlength="300" placeholder="{{ t('deal_reference') }}" style="min-height:44px">
+        <button class="btn small" type="submit" style="flex:none">{{ t('deal_mark_paid') }}</button>
+      </form>
+      {% endif %}
+      {% if side == 'supplier' and m.payment == 'claimed' %}{{ act('confirm_paid', t('deal_confirm_paid'), 'btn small gold', m.id) }}{% endif %}
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+
+{% for x in disputes %}
+<section class="panel stack" style="gap:8px;border-color:{{ '#5A2A2A' if x.status == 'open' else 'var(--line)' }}">
+  <div class="row spread"><b>{{ t('deal_dispute') }}</b><span class="tag {{ 'st-bad' if x.status == 'open' else 'st-closed' }}">{{ t('dispute_' ~ x.status) }}</span></div>
+  <p style="white-space:pre-line">{{ x.reason }}</p>
+  {% if x.status == 'resolved' %}
+  <div class="verified" style="display:block"><b>{{ t('deal_decision') }} · {{ t('outcome_' ~ x.outcome) }}</b><p style="white-space:pre-line;margin-top:6px">{{ x.decision }}</p></div>
+  {% endif %}
+</section>
+{% endfor %}
+
+{% if side and deal.status in ('active', 'disputed') %}
+<section class="panel stack">
+  <h2>{{ t('deal_evidence') }}</h2>
+  {% for f in files %}<a class="small" href="{{ url_for('deals.evidence_file', deal_id=deal.id, file_id=f.id) }}" target="_blank" rel="noopener">{{ f.name }} · {{ f.note or 'file' }} · {{ f.sha256[:12] }}</a>{% endfor %}
+  <form class="stack" method="post" enctype="multipart/form-data" action="{{ url_for('deals.act', deal_id=deal.id) }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="evidence">
+    <label class="f">{{ t('deal_evidence_add') }}<input type="file" name="file" required accept=".pdf,.png,.jpg,.jpeg"></label>
+    <label class="f">{{ t('deal_evidence_note') }}<input type="text" name="note" maxlength="500"></label>
+    <button class="btn small" type="submit">{{ t('deal_upload') }}</button>
+  </form>
+</section>
+{% elif files %}
+<section class="panel stack"><h2>{{ t('deal_evidence') }}</h2>
+  {% for f in files %}<a class="small" href="{{ url_for('deals.evidence_file', deal_id=deal.id, file_id=f.id) }}" target="_blank" rel="noopener">{{ f.name }} · {{ f.note or 'file' }} · {{ f.sha256[:12] }}</a>{% endfor %}
+</section>
+{% endif %}
+
+{% if side and deal.status == 'active' %}
+<details class="panel">
+  <summary style="cursor:pointer;font-weight:800;color:var(--bad)">{{ t('deal_dispute') }}</summary>
+  <form class="stack" method="post" action="{{ url_for('deals.act', deal_id=deal.id) }}" style="margin-top:12px">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="dispute">
+    <label class="f">{{ t('deal_dispute_milestone') }}
+      <select name="milestone_id"><option value="">—</option>{% for m in ms %}<option value="{{ m.id }}">{{ m.seq }}. {{ m.title }}</option>{% endfor %}</select></label>
+    <label class="f">{{ t('deal_dispute_reason') }}<textarea name="reason" required maxlength="4000"></textarea></label>
+    <button class="btn danger" type="submit">{{ t('deal_dispute') }}</button>
+  </form>
+</details>
+{% endif %}
+
+<section class="stack">
+  <h2>{{ t('deal_log') }}</h2>
+  <div class="{{ 'verified' if chain_ok else 'warnbox' }}">{{ t('deal_chain_ok') if chain_ok else t('deal_chain_bad') }}</div>
+  <div class="panel tight facts">
+    {% for e in events %}
+    <div class="r" style="flex-direction:column;gap:2px">
+      <span><b>{{ t('ev_' ~ e.kind) }}</b> · {{ e.company_name or 'HUILIAN' }} {% if e.via != 'web' %}<span class="muted small">via {{ e.via }}</span>{% endif %}</span>
+      {% if e.detail %}<span class="muted" style="font-weight:400;text-align:left;white-space:pre-line">{{ e.detail }}</span>{% endif %}
+      <span class="muted small" style="font-weight:400;text-align:left;font-family:monospace">{{ e.created_at }} · {{ e.hash[:12] }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

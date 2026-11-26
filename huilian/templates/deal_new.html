@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% set nav = 'profile' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block header_left %}
+<a class="iconbtn" href="{{ url_for('me.thread', enquiry_id=enq.id) }}" aria-label="{{ t('back') }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+<strong>{{ t('deal_new_title') }}</strong>
+{% endblock %}
+{% block content %}
+<p class="muted">{{ t('deal_new_sub') }}</p>
+<div class="panel row" style="padding:14px"><span class="muted">{{ t('deal_with') }}</span><b>{{ operator.name }}</b></div>
+
+<form class="stack" method="post">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <input type="hidden" name="enquiry" value="{{ enq.id }}">
+  <label class="f">{{ t('deal_title') }}<input type="text" name="title" required maxlength="200" value="{{ form.get('title', '') }}"></label>
+  <label class="f">{{ t('deal_scope') }}<textarea name="scope" required maxlength="4000">{{ form.get('scope', '') }}</textarea></label>
+  <label class="f">{{ t('deal_currency') }}
+    <select name="currency">{% for c in currencies %}<option value="{{ c }}" {{ 'selected' if form.get('currency') == c }}>{{ c }}</option>{% endfor %}</select>
+  </label>
+  <label class="f">{{ t('deal_pay_terms') }}<textarea name="pay_terms" maxlength="1000" style="min-height:80px">{{ form.get('pay_terms', '') }}</textarea></label>
+
+  <h2>{{ t('milestones') }}</h2>
+  {% set titles = form.getlist('ms_title') if form else [] %}
+  {% set amounts = form.getlist('ms_amount') if form else [] %}
+  {% set dues = form.getlist('ms_due') if form else [] %}
+  {% for i in range(max_ms) %}
+  <fieldset class="panel stack" style="gap:10px;padding:14px;border:1px solid var(--line);margin:0" {% if i > 1 and not (titles[i] if titles|length > i else '') %}data-extra hidden{% endif %}>
+    <legend class="muted" style="padding:0 6px">{{ t('ms_title') }} {{ i + 1 }}</legend>
+    <label class="f">{{ t('ms_title') }}<input type="text" name="ms_title" maxlength="200" value="{{ titles[i] if titles|length > i else '' }}" {{ 'required' if i == 0 }}></label>
+    <div class="row" style="flex-wrap:nowrap">
+      <label class="f grow">{{ t('ms_amount') }}<input type="text" inputmode="decimal" name="ms_amount" value="{{ amounts[i] if amounts|length > i else '' }}" {{ 'required' if i == 0 }}></label>
+      <label class="f grow">{{ t('ms_due') }}<input type="date" name="ms_due" value="{{ dues[i] if dues|length > i else '' }}"></label>
+    </div>
+  </fieldset>
+  {% endfor %}
+  <button class="btn small" type="button" id="addms">+ {{ t('ms_title') }}</button>
+
+  <p class="fine">{{ t('deal_no_funds') }}</p>
+  <button class="btn gold block" type="submit">{{ t('deal_propose') }}</button>
+</form>
+<script>
+document.getElementById('addms').addEventListener('click', function () {
+  var next = document.querySelector('fieldset[data-extra][hidden]');
+  if (next) { next.hidden = false; next.querySelector('input').focus(); }
+  if (!document.querySelector('fieldset[data-extra][hidden]')) this.hidden = true;
+});
+</script>
+{% endblock %}

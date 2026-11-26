@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import logo_img %}
+{% set nav = 'profile' %}
+{% block wrap_class %}narrow{% endblock %}
+{% block header_left %}
+<a class="iconbtn" href="{{ url_for('me.profile') }}" aria-label="{{ t('back') }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+<strong>{{ t('edit_profile') }}</strong>
+{% endblock %}
+{% block content %}
+<div class="row">{{ logo_img(company, 'logo lg') }}<a class="btn small" href="{{ url_for('public.supplier', company_id=company.id) }}">{{ t('view') }} →</a></div>
+<form class="stack" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label class="f">{{ t('logo') }}<input type="file" name="logo" accept=".png,.jpg,.jpeg"></label>
+  <label class="f">{{ t('about_en') }}<textarea name="about_en" maxlength="4000">{{ prof.about_en }}</textarea></label>
+  <label class="f">{{ t('about_zh') }}<textarea name="about_zh" maxlength="4000">{{ prof.about_zh }}</textarea></label>
+  <label class="f">{{ t('services_en') }}<textarea name="services_en" maxlength="4000" placeholder="Pay-in: e-wallets, InstaPay">{{ prof.services_en }}</textarea></label>
+  <label class="f">{{ t('services_zh') }}<textarea name="services_zh" maxlength="4000" placeholder="代收: 电子钱包、InstaPay">{{ prof.services_zh }}</textarea></label>
+  <label class="f">{{ t('markets') }}<input type="text" name="markets" maxlength="200" value="{{ prof.markets }}"></label>
+  <label class="f">{{ t('currencies') }}<input type="text" name="currencies" maxlength="200" value="{{ prof.currencies }}"></label>
+  <label class="f">{{ t('website') }}<input type="text" name="website" maxlength="300" value="{{ prof.website }}" placeholder="https://"></label>
+  <button class="btn gold block" type="submit">{{ t('save') }}</button>
+</form>
+{% endblock %}

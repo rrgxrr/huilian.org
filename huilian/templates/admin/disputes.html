@@ -1,0 +1,32 @@
+{% extends 'admin/_layout.html' %}
+{% block content %}
+<h1>{{ t('a_disputes') }}</h1>
+<p class="fine">{{ t('deal_no_funds') }}</p>
+{% for x in rows %}
+<div class="qitem">
+  <div class="row spread">
+    <div class="stack" style="gap:4px">
+      <div class="row" style="gap:8px"><a href="{{ url_for('deals.view', deal_id=x.deal_id) }}"><b style="font-size:16px">#{{ x.deal_id }} {{ x.title }}</b></a>
+        <span class="tag {{ 'st-bad' if x.status == 'open' else 'st-closed' }}">{{ t('dispute_' ~ x.status) }}</span></div>
+      <span class="muted">{{ x.operator_name }} ⇄ {{ x.supplier_name }} · {{ t('opened_by') }} {{ x.opened_name }} · {{ x.created_at[:16] }}</span>
+    </div>
+    <a class="btn small" href="{{ url_for('deals.view', deal_id=x.deal_id) }}">{{ t('view') }}</a>
+  </div>
+  <p style="white-space:pre-line">{{ x.reason }}</p>
+  {% if x.status == 'open' %}
+  <form method="post" style="flex-direction:column;align-items:stretch">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="dispute_id" value="{{ x.id }}">
+    <label class="f">{{ t('outcome') }}
+      <select name="outcome" required>{% for o in ['operator', 'supplier', 'split', 'cancel'] %}<option value="{{ o }}">{{ t('outcome_' ~ o) }}</option>{% endfor %}</select></label>
+    <label class="f">{{ t('decision') }}<textarea name="decision" required maxlength="4000"></textarea></label>
+    <button class="btn small gold" type="submit" style="align-self:flex-start">{{ t('resolve') }}</button>
+  </form>
+  {% else %}
+  <div class="verified" style="display:block"><b>{{ t('outcome_' ~ x.outcome) }}</b><p style="white-space:pre-line;margin-top:6px">{{ x.decision }}</p></div>
+  {% endif %}
+</div>
+{% else %}
+<div class="empty">{{ t('queue_empty') }}</div>
+{% endfor %}
+{% endblock %}

@@ -5,13 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>{{ t('admin') }} · HUILIAN</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 {% from '_macros.html' import lang_select with context %}
 <div class="admin">
   <aside>
-    <a class="brand" href="{{ url_for('public.home') }}"><span class="mark">灰</span><span>HUILIAN<br><span class="muted" style="font-weight:500">{{ t('admin') }}</span></span></a>
+    <a class="brand" href="{{ url_for('public.home') }}"><img class="mark-img" src="{{ url_for('static', filename='logo.png') }}" alt="" width="40" height="40"><span>HUILIAN<br><span class="muted" style="font-weight:500">{{ t('admin') }}</span></span></a>
     <nav aria-label="Admin">
       <a href="{{ url_for('admin.review') }}" class="{{ 'on' if active == 'review' }}">{{ t('a_review') }}{% if k.pending %}<span class="badge">{{ k.pending }}</span>{% endif %}</a>
       <a href="{{ url_for('deals.disputes') }}" class="{{ 'on' if active == 'disputes' }}">{{ t('a_disputes') }}{% if k.disputes %}<span class="badge">{{ k.disputes }}</span>{% endif %}</a>

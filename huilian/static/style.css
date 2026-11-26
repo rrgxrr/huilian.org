@@ -35,6 +35,7 @@ main.wrap { flex: 1; padding-top: 8px; padding-bottom: 32px; display: flex; flex
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; font-size: 18px; }
 .mark { width: 36px; height: 36px; border-radius: 10px; border: 2px solid var(--gold); color: var(--gold);
   display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-family: "Noto Sans SC", sans-serif; }
+.mark-img { width: 40px; height: 40px; border-radius: 999px; flex: none; display: block; }
 .iconbtn { width: 44px; height: 44px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line);
   display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: var(--ink); }
 .langsel { display: flex; align-items: center; gap: 6px; background: var(--panel); border: 1px solid var(--line);
